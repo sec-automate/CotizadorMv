@@ -6,7 +6,7 @@ import AdminPage from './pages/AdminPage';
 import LoginPage from './pages/LoginPage';
 import './App.css';
 
-const API_URL = 'http://localhost:5001/api';
+const API_URL = process.env.REACT_APP_API_URL || '/api';
 
 function App() {
   const [rates, setRates] = useState([]);
@@ -147,7 +147,9 @@ function App() {
       });
     } catch (err) {
       console.error('Error adding rate', err);
-      alert('Error al guardar: ' + err.message);
+      // If error has a code (from DB), show it
+      const displayMessage = err.code ? `Error DB (${err.code}): ${err.message}` : err.message;
+      alert('Error al guardar: ' + displayMessage);
     }
   };
 

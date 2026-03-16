@@ -73,8 +73,17 @@ app.post('/api/rates', async (req, res) => {
         console.log('Success: Rate saved');
         res.status(201).json(result.rows[0]);
     } catch (err) {
-        console.error('Database Error in POST:', err);
-        res.status(500).json({ error: err.message });
+        console.error('Database Error in POST:', {
+            message: err.message,
+            code: err.code,
+            detail: err.detail,
+            hint: err.hint
+        });
+        res.status(500).json({ 
+            error: err.message, 
+            code: err.code,
+            detail: err.detail
+        });
     }
 });
 
@@ -118,8 +127,17 @@ app.put('/api/rates/:id', async (req, res) => {
         console.log('Success: Rate updated');
         res.json(result.rows[0]);
     } catch (err) {
-        console.error('Database Error in PUT:', err);
-        res.status(500).json({ error: err.message });
+        console.error('Database Error in PUT:', {
+            message: err.message,
+            code: err.code,
+            detail: err.detail,
+            hint: err.hint
+        });
+        res.status(500).json({ 
+            error: err.message, 
+            code: err.code,
+            detail: err.detail
+        });
     }
 });
 
