@@ -12,7 +12,8 @@ const QuotePage = ({
     setQuoteInput,
     quoteResult,
     handleCalculate,
-    error
+    error,
+    apiUrl
 }) => {
     const [leadLoading, setLeadLoading] = useState(false);
     const [leadError, setLeadError] = useState('');
@@ -22,7 +23,7 @@ const QuotePage = ({
         setLeadLoading(true);
         setLeadError('');
         try {
-            const resp = await fetch(`http://localhost:5001/api/lead/${quoteInput.leadId.trim()}`);
+            const resp = await fetch(`${apiUrl}/lead/${quoteInput.leadId.trim()}`);
             const data = await resp.json();
             if (!resp.ok) throw new Error(data.error || 'Error al cargar lead');
             setQuoteInput(prev => ({

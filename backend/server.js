@@ -6,8 +6,9 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-app.use(cors());
+app.use(cors()); // In production, you might want to restrict this to your domain
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.get('/api/debug-ping', (req, res) => {
     res.json({ status: 'ok', time: new Date().toISOString(), message: 'Server is responding' });

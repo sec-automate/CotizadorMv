@@ -6,7 +6,10 @@ import AdminPage from './pages/AdminPage';
 import LoginPage from './pages/LoginPage';
 import './App.css';
 
-const API_URL = process.env.REACT_APP_API_URL || '/api';
+// Detect API URL: Use environment variable or default to relative path for production,
+// falling back to local port if necessary for development.
+const API_URL = process.env.REACT_APP_API_URL || 
+                (window.location.hostname === 'localhost' ? 'http://localhost:5001/api' : '/api');
 
 function App() {
   const [rates, setRates] = useState([]);
@@ -358,6 +361,7 @@ function App() {
                 quoteResult={quoteResult}
                 handleCalculate={handleCalculate}
                 error={error}
+                apiUrl={API_URL}
               />
             } />
             <Route path="/admin" element={
@@ -370,6 +374,7 @@ function App() {
                   loading={loading}
                   handleToggleActive={handleToggleActive}
                   handleDeleteRate={handleDeleteRate}
+                  apiUrl={API_URL}
                 />
               ) : <Navigate to="/login" />
             } />

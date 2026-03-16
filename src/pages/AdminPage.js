@@ -7,7 +7,8 @@ const AdminPage = ({
     rates,
     loading,
     handleToggleActive,
-    handleDeleteRate
+    handleDeleteRate,
+    apiUrl
 }) => {
     return (
         <div className="card">
