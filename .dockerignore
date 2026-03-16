@@ -1,0 +1,10 @@
+node_modules
+build
+.git
+.env
+Dockerfile
+docker-compose.yml
+server_logs*
+*.json
+!package.json
+!package-lock.json
