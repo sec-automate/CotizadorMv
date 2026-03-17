@@ -17,4 +17,9 @@ router.delete('/rates/:id', rateController.deleteRate);
 // Lead Routes
 router.get('/lead/:id', kommoController.getLead);
 
+// Extern Quote API
+const quoteController = require('../controllers/quoteController');
+router.get('/quote', quoteController.calculateQuote); // Soporta query params ?adults=2&rateId=1
+router.post('/quote', quoteController.calculateQuote); // Soporta body JSON
+
 module.exports = router;

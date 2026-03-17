@@ -90,7 +90,7 @@ function App() {
     };
 
   const handleCalculate = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setError(null);
     setQuoteResult(null);
 

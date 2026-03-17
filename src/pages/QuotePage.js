@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
@@ -17,6 +17,49 @@ const QuotePage = ({
 }) => {
     const [leadLoading, setLeadLoading] = useState(false);
     const [leadError, setLeadError] = useState('');
+
+    // Listener para rutas API con auto-cotización
+    useEffect(() => {
+        if (!rates || rates.length === 0) return;
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('autoPdf') === 'true') {
+            const rId = params.get('rateId');
+            const targetRate = rates.find(r => r.id === parseInt(rId));
+            if (targetRate) {
+                // Seteamos la tarifa y los inputs
+                setActiveRate(targetRate);
+                setQuoteInput(prev => ({
+                    ...prev,
+                    adults: parseInt(params.get('adults')) || 1,
+                    children: parseInt(params.get('children')) || 0,
+                    pets: parseInt(params.get('pets')) || 0,
+                    rooms: params.get('rooms') || '',
+                    checkIn: params.get('checkIn') || '',
+                    checkOut: params.get('checkOut') || ''
+                }));
+                
+                // Marcamos la bandera para el auto PDF y limpiamos la URL
+                window.__autoPdfTriggered = true;
+                window.history.replaceState({}, '', window.location.pathname);
+                
+                // Esperamos que React actualice Estados y luego calculamos presionando el botón
+                setTimeout(() => {
+                    const btn = document.getElementById('btn-calc');
+                    if (btn) btn.click();
+                }, 800);
+            }
+        }
+    }, [rates]);
+
+    // Listener para descargar PDF al terminar el cálculo API
+    useEffect(() => {
+        if (quoteResult && window.__autoPdfTriggered) {
+             window.__autoPdfTriggered = false; 
+             setTimeout(() => {
+                 generateQuotePDF();
+             }, 800); // tiempo al renderizado de tablas
+        }
+    }, [quoteResult]);
 
     const loadLead = async () => {
         if (!quoteInput.leadId || !quoteInput.leadId.trim()) return;
@@ -254,7 +297,7 @@ const QuotePage = ({
                     </div>
                 </div>
 
-                <button type="submit">Generar Oferta</button>
+                <button type="submit" id="btn-calc">Generar Oferta</button>
             </form>
 
             {error && <p style={{ color: '#ef4444', marginTop: '1rem', fontSize: '0.9rem' }}>{error}</p>}
