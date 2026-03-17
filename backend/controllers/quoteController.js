@@ -4,7 +4,7 @@ const { calculateTotal, parsePrice } = require('../utils/pricing');
 exports.calculateQuote = async (req, res) => {
     try {
         // Permitir que los parámetros vengan por GET (?query) o POST (body)
-        const params = Object.keys(req.body).length > 0 ? req.body : req.query;
+        const params = (req.body && Object.keys(req.body).length > 0) ? req.body : req.query;
         
         const { 
             rateId, 
