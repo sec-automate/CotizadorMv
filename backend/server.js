@@ -17,13 +17,22 @@ app.use((req, res, next) => {
     next();
 });
 
+const path = require('path');
+
 // ── API Routes ───────────────────────────────────────────────────────────────
 app.use('/api', apiRoutes);
 
-// ── Catch-all JSON 404 handler ───────────────────────────────────────────────
-app.use((req, res) => {
-    console.log(`404 - Not Found: ${req.method} ${req.url}`);
-    res.status(404).json({ error: 'Route not found' });
+// ── Serve React Frontend ─────────────────────────────────────────────────────
+// Serve static files from the React app build directory
+app.use(express.static(path.join(__dirname, '../build')));
+
+// The "catchall" handler: for any request that doesn't
+// match an API route, send back React's index.html file.
+app.get('*', (req, res) => {
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'Route not found' });
+    }
+    res.sendFile(path.join(__dirname, '../build', 'index.html'));
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
