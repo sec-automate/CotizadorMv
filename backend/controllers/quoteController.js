@@ -75,7 +75,10 @@ exports.calculateQuote = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('API Error in calculateQuote:', error);
-        res.status(500).json({ error: 'Error interno calculando la cotización.' });
+        console.error('API Error in calculateQuote:', {
+            message: error.message,
+            stack: error.stack
+        });
+        res.status(500).json({ error: 'Error interno calculando la cotización.', details: error.message });
     }
 };
