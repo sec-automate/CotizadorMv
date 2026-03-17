@@ -145,9 +145,14 @@ function App() {
   return (
     <Router>
       <div className="container">
-        <header>
-          <h1>TarifaMaster</h1>
-          <p>Precios Escalados y Multi-habitación</p>
+        <header style={{ textAlign: 'center', marginBottom: '1.5rem', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <img 
+            src="/Margarita.png" 
+            alt="TarifaMv Logo" 
+            style={{ width: '100%', maxWidth: '300px', height: 'auto', objectFit: 'contain', marginBottom: '0.5rem' }} 
+          />
+          <h1 style={{ display: 'none' }}>TarifaMv</h1>
+          <p style={{ margin: 0, color: 'var(--text-light)', fontSize: '0.9rem' }}>Precios Escalados y Multi-habitación</p>
         </header>
 
         <Navbar user={user} onLogout={handleLogout} />
