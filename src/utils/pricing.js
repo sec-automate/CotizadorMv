@@ -5,95 +5,114 @@ export const parsePrice = (price) => {
 };
 
 export const calculateTotal = (rate, input, days) => {
+    // 1. Validaciones iniciales
     const totalPeople = input.adults + input.children;
     const roomCapacity = rate.max_people_per_room || 4;
+    
+    // Al menos 1 adulto por habitación, se necesitan tantas habitaciones como dicten los cupos
     const numRooms = Math.ceil(totalPeople / roomCapacity);
 
     if (input.adults < numRooms) {
-        return { error: `Se requieren al menos ${numRooms} adultos para ${numRooms} habitaciones.` };
+        return { error: `Se requieren al menos ${numRooms} adultos para ocupar ${numRooms} habitaciones.` };
     }
 
-    let rooms = [];
-    for (let i = 0; i < numRooms; i++) {
-        rooms.push({ adults: 0, children: 0 });
+    if (input.pets > numRooms) {
+        return { error: `Límite de 1 mascota por habitación (Máx: ${numRooms} para esta distribución).` };
     }
 
+    // 2. Inicializar habitaciones
+    let rooms = Array.from({ length: numRooms }, () => ({ adults: 0, children: 0, pets: 0 }));
+
+    // 3. Garantizar al menos 1 adulto por habitación (Regla obligatoria de hotelería)
     let adultsToDistribute = input.adults;
+    for (let i = 0; i < numRooms; i++) {
+        if (adultsToDistribute > 0) {
+            rooms[i].adults = 1;
+            adultsToDistribute--;
+        }
+    }
+
+    // 4. Repartir el resto de adultos equitativamente (para maximizar que cada hab llegue a >=2 y obtenga descuentos de niños)
     let roomIdx = 0;
     while (adultsToDistribute > 0) {
-        rooms[roomIdx].adults++;
-        adultsToDistribute--;
+        if (rooms[roomIdx].adults < roomCapacity) {
+            rooms[roomIdx].adults++;
+            adultsToDistribute--;
+        }
         roomIdx = (roomIdx + 1) % numRooms;
     }
 
-    let petsToDistribute = input.pets;
-    roomIdx = 0;
-    while (petsToDistribute > 0 && roomIdx < numRooms) {
-        rooms[roomIdx].pets = 1;
-        petsToDistribute--;
-        roomIdx++;
-    }
-    // Initialize pets to 0 for rooms without pets
-    rooms.forEach(r => { if (!r.pets) r.pets = 0; });
-
+    // 5. Repartir los niños equitativamente en los espacios sobrantes
     let childrenToDistribute = input.children;
     roomIdx = 0;
-    let attempts = 0;
-    const maxAttempts = input.children * numRooms * 2;
-
-    while (childrenToDistribute > 0 && attempts < maxAttempts) {
-        const currentTotal = rooms[roomIdx].adults + rooms[roomIdx].children;
-        if (currentTotal < roomCapacity) {
+    let safetyCounter = 0;
+    while (childrenToDistribute > 0 && safetyCounter < 1000) {
+        const currentSpace = roomCapacity - (rooms[roomIdx].adults + rooms[roomIdx].children);
+        if (currentSpace > 0) {
             rooms[roomIdx].children++;
             childrenToDistribute--;
         }
         roomIdx = (roomIdx + 1) % numRooms;
-        attempts++;
+        safetyCounter++;
     }
 
-    if (childrenToDistribute > 0) return { error: `No hay suficiente espacio en las habitaciones.` };
-
-    if (input.pets > numRooms) {
-        return { error: `Límite de 1 mascota por habitación excedido (Máx: ${numRooms} para esta distribución).` };
+    // Si definitivamente no cupieron
+    if (childrenToDistribute > 0) {
+        return { error: `Error matemático distributivo: No caben ${totalPeople} huéspedes en las ${numRooms} habitaciones según la capacidad máxima (${roomCapacity}).` };
     }
 
-    // Free children: 1 free child per room if the room has more than 1 adult AND the rate enables it (free_children_count > 0)
-    const freeChildEnabled = parseInt(rate.free_children_count) > 0;
+    // 6. Distribuir mascotas (1 por hab)
+    let petsToDistribute = input.pets;
+    for (let i = 0; i < numRooms && petsToDistribute > 0; i++) {
+        rooms[i].pets = 1;
+        petsToDistribute--;
+    }
 
+    // 6. Configuración de precios base
+    const freeChildrenLimit = parseInt(rate.free_children_count) || 0;
     const childPrice = parseFloat(rate.child_price) || 0;
     const petPrice = parseFloat(rate.pet_price) || 0;
 
+    // 7. Cálculo por habitación
     let totalCost = 0;
+    
     rooms.forEach(room => {
-        const numAdults = Number(room.adults);
-        const numChildren = Number(room.children);
-        const priceKey = `adult_price_${Math.min(4, numAdults)}`;
+        // Encontrar la tarifa de adulto correspondiente (1 a 4)
+        const priceKey = `adult_price_${Math.min(4, room.adults)}`;
         const adultPricePerPerson = parseFloat(rate[priceKey]) || 0;
-        let billableChildren = numChildren;
+        
+        let billableChildren = room.children;
+        let freeChildrenInRoom = 0;
 
-        // 1 free child per room if room has more than 1 adult and rate enables free children
-        if (freeChildEnabled && numAdults > 1 && billableChildren > 0) {
-            billableChildren -= 1;
+        // Regla: Niños gratis SOLO si hay más de 1 adulto pagando tarifa
+        if (room.adults > 1 && freeChildrenLimit > 0) {
+            // Le damos gratis hasta el límite configurado (usualmente 1)
+            freeChildrenInRoom = Math.min(billableChildren, freeChildrenLimit);
+            billableChildren -= freeChildrenInRoom;
         }
 
-        const adultTotal = numAdults * adultPricePerPerson;
+        const adultTotal = room.adults * adultPricePerPerson;
         const childTotal = billableChildren * childPrice;
-        const petTotal = (Number(room.pets) || 0) * petPrice;
-        const roomCost = adultTotal + childTotal + petTotal;
+        const petTotal = room.pets * petPrice;
+        const roomTotalNight = adultTotal + childTotal + petTotal;
 
-        // Store breakdown for display
+        // Guardar desglose para la vista
         room.adultPricePerPerson = adultPricePerPerson;
         room.adultTotal = adultTotal;
         room.billableChildren = billableChildren;
+        room.freeChildren = freeChildrenInRoom;
         room.childTotal = childTotal;
         room.petTotal = petTotal;
-        room.freeChild = (freeChildEnabled && numAdults > 1 && numChildren > 0);
+        room.freeChild = freeChildrenInRoom > 0;
+        room.cost = roomTotalNight;
 
-        room.cost = roomCost;
-        totalCost += roomCost;
+        totalCost += roomTotalNight;
     });
 
-    return { total: totalCost * days, roomDetails: rooms };
+    return { 
+        total: totalCost * days, 
+        roomDetails: rooms 
+    };
 };
 
 export const isRateDateValid = (rate, checkIn, checkOut) => {
