@@ -162,9 +162,15 @@ const QuotePage = ({
                         <input type="number" min="0" value={quoteInput.children} onChange={(e) => setQuoteInput({ ...quoteInput, children: parseInt(e.target.value) })} />
                     </div>
                 </div>
-                <div className="form-group">
-                    <label>Mascotas</label>
-                    <input type="number" min="0" value={quoteInput.pets} onChange={(e) => setQuoteInput({ ...quoteInput, pets: parseInt(e.target.value) })} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div className="form-group">
+                        <label>Mascotas</label>
+                        <input type="number" min="0" value={quoteInput.pets} onChange={(e) => setQuoteInput({ ...quoteInput, pets: parseInt(e.target.value) || 0 })} />
+                    </div>
+                    <div className="form-group">
+                        <label>Habitaciones (Opcional)</label>
+                        <input type="number" min="1" placeholder="Auto" value={quoteInput.rooms} onChange={(e) => setQuoteInput({ ...quoteInput, rooms: e.target.value ? parseInt(e.target.value) : '' })} />
+                    </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                     <div className="form-group">

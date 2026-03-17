@@ -10,7 +10,19 @@ export const calculateTotal = (rate, input, days) => {
     const roomCapacity = rate.max_people_per_room || 4;
     
     // Al menos 1 adulto por habitación, se necesitan tantas habitaciones como dicten los cupos
-    const numRooms = Math.ceil(totalPeople / roomCapacity);
+    let numRooms = Math.ceil(totalPeople / roomCapacity);
+
+    // Override manual: Si el usuario forzó una cantidad de habitaciones
+    if (input.rooms && parseInt(input.rooms) > 0) {
+        const manualRooms = parseInt(input.rooms);
+        if (manualRooms < numRooms) {
+            return { error: `Capacidad excedida: ${totalPeople} huéspedes requieren mínimo ${numRooms} habitaciones.` };
+        }
+        if (manualRooms > input.adults) {
+            return { error: `No se pueden pedir ${manualRooms} habitaciones para solo ${input.adults} adultos. (Mínimo 1 adulto por hab).` };
+        }
+        numRooms = manualRooms;
+    }
 
     if (input.adults < numRooms) {
         return { error: `Se requieren al menos ${numRooms} adultos para ocupar ${numRooms} habitaciones.` };

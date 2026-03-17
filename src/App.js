@@ -20,7 +20,7 @@ function App() {
 
     // Quote form state
     const [quoteInput, setQuoteInput] = useState({
-        adults: 1, children: 0, pets: 0, checkIn: '', checkOut: '', 
+        rooms: '', adults: 1, children: 0, pets: 0, checkIn: '', checkOut: '', 
         applyDiscount: false, discountPercentage: 0, customerName: '', 
         customerId: '', customerPhone: '', leadId: ''
     });
